@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Sole — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080d17;
+    --surface:   #0e1624;
+    --surface2:  #141e30;
+    --border:    #1e2d45;
+    --border2:   #2a3f5f;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --accent:    #7c6fcd;
+    --accent2:   #9d92e0;
+    --green:     #22c55e;
+    --red:       #f43f5e;
+    --amber:     #f59e0b;
+    --radius:    12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8, 13, 23, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent), #4f46e5);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--green);
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── Layout ── */
+  .page {
+    max-width: 100%;
+    padding: 28px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  /* ── Status Banner ── */
+  .status-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 15px;
+  }
+
+  .indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+
+  .indicator-dot.fall {
+    background: var(--red);
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+    animation: blink 0.8s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .divider-v {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+
+  .risk-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .risk-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .btn-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: rgba(244, 63, 94, 0.1);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    color: var(--red);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .btn-alert:hover {
+    background: rgba(244, 63, 94, 0.18);
+    border-color: rgba(244, 63, 94, 0.6);
+  }
+
+  /* ── Stat Cards ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .stat-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.red   { color: var(--red); }
+  .stat-value.amber { color: var(--amber); }
+
+  .stat-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Charts ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 220px 220px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-card:last-child {
+    height: 220px;
+  }
+
+  .chart-title {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .gauge-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gauge-wrap canvas {
+    width: 140px !important;
+    height: 140px !important;
+  }
+
+  .gauge-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .gauge-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .gauge-sub {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── History Table ── */
+  .history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .history-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .badge-count {
+    padding: 2px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 20px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody td {
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover td { background: var(--surface2); }
+
+  .sev-badge {
+    display: inline-flex;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .sev-none {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--muted);
+  }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--muted);
+    padding: 28px 20px;
+    font-size: 13px;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 999;
+    max-width: 280px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .toast-title { font-weight: 600; margin-bottom: 2px; color: var(--green); }
+
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr 1fr; }
+    .charts-row .chart-card:last-child { grid-column: 1 / -1; }
+    .page { padding: 20px 16px 40px; }
+    .topbar { padding: 0 16px; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-icon">👟</div>
+    Guardian Sole
+  </div>
+  <div class="topbar-right">
+    <div class="live-pill">
+      <div class="live-dot"></div>
+      Live Monitoring
+    </div>
+  </div>
+</nav>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Patient monitoring overview · Updated every second</div>
+    </div>
+  </div>
+
+  <!-- Status Banner -->
+  <div class="status-banner">
+    <div class="status-left">
+      <div class="status-indicator">
+        <div class="indicator-dot" id="indicatorDot"></div>
+        <span id="activityStatus">Normal Activity</span>
+      </div>
+      <div class="divider-v"></div>
+      <div class="risk-badge">
+        Fall Risk &nbsp;
+        <span class="risk-value" id="riskValue">20%</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Falls</div>
+      <div class="stat-value green" id="totalFalls">0</div>
+      <div class="stat-hint">All time recorded</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Last Fall</div>
+      <div class="stat-value" id="lastFall" style="font-size:18px; padding-top:4px;">None</div>
+      <div class="stat-hint">Most recent event</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Steps Today</div>
+      <div class="stat-value amber" id="stepsValue">0</div>
+      <div class="stat-hint">Daily goal: 5,000</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row">
+
+    <!-- Activity Gauge -->
+    <div class="chart-card">
+      <div class="chart-title">Activity Level</div>
+      <div class="gauge-wrap">
+        <canvas id="activityDial" height="160"></canvas>
+        <div class="gauge-label">
+          <div class="gauge-num" id="activityNum">70%</div>
+          <div class="gauge-sub">Active</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Gauge -->
+    <div class="chart-card">
+      <div class="chart-title">Fall Risk</div>
+      <div class="gauge-wrap">
+        <canvas id="riskGauge" height="160"></canvas>
+        <div class="gauge-label">
+          <div class="gauge-num" id="riskNum">20%</div>
+          <div class="gauge-sub">Risk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Steps -->
+    <div class="chart-card" style="display:flex; flex-direction:column;">
+      <div class="chart-title">Weekly Steps</div>
+      <div style="flex:1; position:relative; min-height:0;">
+        <canvas id="stepsChart" style="max-height:160px;"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- History Table -->
+  <div class="history-card">
+    <div class="history-header">
+      <div class="history-title">Recent Falls</div>
+      <div class="badge-count" id="fallCount">0 events</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Location</th>
+          <th>Severity</th>
+          <th>Action Taken</th>
+        </tr>
+      </thead>
+      <tbody id="fallTableBody">
+        <tr class="empty-row">
+          <td colspan="4">No fall events recorded — all clear 🟢</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-title">Guardian Notified</div>
+  Emergency alert sent successfully.
+</div>
+
+
+<script>
+
+/* ── Toast ── */
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.querySelector('.toast-title').textContent = isError ? 'Error' : 'Guardian Notified';
+  t.querySelector('.toast-title').style.color = isError ? 'var(--red)' : 'var(--green)';
+  t.lastChild.textContent = msg || 'Emergency alert sent successfully.';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ── Charts ── */
+const gaugeOpts = {
+  cutout: '78%',
+  plugins: { legend: { display: false }, tooltip: { enabled: false } },
+  animation: { duration: 400 }
+};
+
+const activityChart = new Chart(document.getElementById('activityDial'), {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [70, 30],
+      backgroundColor: ['#22c55e', '#1e2d45'],
+      borderWidth: 0,
+      borderRadius: 6
+    }]
+  },
+  options: gaugeOpts
+});
+
+const riskChart = new Chart(document.getElementById('riskGauge'), {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [20, 80],
+      backgroundColor: ['#f43f5e', '#1e2d45'],
+      borderWidth: 0,
+      borderRadius: 6
+    }]
+  },
+  options: gaugeOpts
+});
+
+const stepsChart = new Chart(document.getElementById('stepsChart'), {
+  type: 'line',
+  data: {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [{
+      label: 'Steps',
+      data: [1200, 2000, 1800, 2600, 2400, 3000, 2543],
+      borderColor: '#7c6fcd',
+      backgroundColor: 'rgba(124, 111, 205, 0.08)',
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: '#7c6fcd',
+      pointRadius: 4
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#1e2d45' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#1e2d45' } }
+    }
+  }
+});
+
+/* ── STATE ── */
+let totalFalls = 0;
+let lastStatus = "SAFE";
+const fallEvents = [];
+
+/* ── UPDATE UI ── */
+function updateUI(isFall) {
+  const dot = document.getElementById('indicatorDot');
+  const status = document.getElementById('activityStatus');
+  const risk = document.getElementById('riskValue');
+  const riskNum = document.getElementById('riskNum');
+  const actNum = document.getElementById('activityNum');
+
+  if (isFall) {
+    dot.className = 'indicator-dot fall';
+    status.textContent = 'Fall Detected';
+    risk.textContent = '95%';
+    riskNum.textContent = '95%';
+    actNum.textContent = '20%';
+
+    activityChart.data.datasets[0].data = [20, 80];
+    riskChart.data.datasets[0].data = [95, 5];
+
+    totalFalls++;
+    document.getElementById('totalFalls').textContent = totalFalls;
+    document.getElementById('lastFall').textContent = 'Just Now';
+
+    const now = new Date();
+    fallEvents.unshift({
+      date: now.toLocaleString(),
+      location: 'Detected',
+      severity: 'High'
+    });
+
+    renderFallTable();
+    showToast("🚨 Fall detected! Alert sent.");
+
+  } else {
+    dot.className = 'indicator-dot';
+    status.textContent = 'Normal Activity';
+    risk.textContent = '20%';
+    riskNum.textContent = '20%';
+    actNum.textContent = '70%';
+
+    activityChart.data.datasets[0].data = [70, 30];
+    riskChart.data.datasets[0].data = [20, 80];
+  }
+
+  activityChart.update();
+  riskChart.update();
+}
+
+/* ── TABLE ── */
+function renderFallTable() {
+  const body = document.getElementById('fallTableBody');
+  const count = document.getElementById('fallCount');
+
+  count.textContent = fallEvents.length + " events";
+
+  body.innerHTML = fallEvents.map(e => `
+    <tr>
+      <td>${e.date}</td>
+      <td>${e.location}</td>
+      <td><span class="sev-badge" style="background:rgba(244,63,94,0.1);color:#f43f5e;">${e.severity}</span></td>
+      <td style="color:var(--muted);">Alert sent</td>
+    </tr>
+  `).join('');
+}
+
+/* ── STATUS FETCH (FIXED 🔥) ── */
+setInterval(() => {
+  fetch('/get-status')
+    .then(r => r.json())
+    .then(data => {
+      const currentStatus = data.status;
+
+      console.log("STATUS:", currentStatus);
+
+      // 🔥 Only update when status changes
+      if (currentStatus !== lastStatus) {
+        updateUI(currentStatus === 'FALL DETECTED');
+        lastStatus = currentStatus;
+      }
+    })
+    .catch(() => {});
+}, 1000);
+
+/* ── STEP UPDATE ── */
+setInterval(() => {
+  fetch('/get-steps')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('stepsValue').textContent = data.steps;
+
+      stepsChart.data.datasets[0].data[6] = data.steps;
+      stepsChart.update();
+    })
+    .catch(() => {});
+}, 1000);
+
+</script>
+</body>
+</html>
